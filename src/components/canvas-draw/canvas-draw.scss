@@ -1,0 +1,73 @@
+canvas-draw {
+    height: 100%;
+    width: 100%;
+    display: block;
+    
+    .toolbar-md {
+        min-height: initial !important;
+    }
+ 
+    #top-toolbar {
+        position: absolute;
+        top: 0;
+    }
+ 
+    #bottom-toolbar {
+        position: absolute;
+        bottom: 0;
+    }
+    
+    .toolbar-text{
+        position: relative;
+        top: 4px;
+    }
+    
+    .separator {
+        font-size: 2.2rem;
+        position: relative;
+        top: 5px;
+        color: lightgray;
+        margin: 0 20px;
+    }
+    
+    .music-icon {
+        cursor: pointer;
+        font-weight: 500;
+        padding: 0 0.1em;
+        font-size: 1.8em;
+        position: relative;
+        top: 9px;
+        line-height: .67;
+    }
+    
+    /*
+    .label-file {
+        cursor: pointer;
+    }
+
+    .label-file:hover {
+    }
+    */
+
+    .input-file {
+        display: none;
+    }
+    
+    .button-shadow {
+        box-shadow: inset 0 0 4px #000000;
+    }
+    
+    .input-editable {
+        pointer-events: initial !important; margin: 0 10px;
+    }
+    
+    .inline-icon-button {
+        display: inline-block;
+        margin: 0px !important;
+        padding: 0px !important;
+        height: inherit !important;
+        contain: inherit !important;
+        overflow:inherit !important;
+        max-width: 30px !important;
+    }
+}

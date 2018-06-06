@@ -1,0 +1,180 @@
+<!-- Generated template for the CanvasDrawComponent component -->
+<ion-header>
+<ion-toolbar>
+    <ion-buttons left>
+        <!-- Fichier -->        
+        <span class="toolbar-text">Fichier</span>
+        <button color="dark" ion-button icon-only (click)="openChoregraphy()" title="Ouvrir une chor&eacute;graphie"><ion-icon name="folder-open"></ion-icon></button>        
+        <button *ngIf="choregraphy.steps && choregraphy.steps.length > 0" color="dark" ion-button icon-only (click)="saveChoregraphy()" title="Enregistrer la chor&eacute;graphie"><ion-icon name="recording"></ion-icon></button>
+
+        <!-- Import / export -->        
+        <label for="fileimport" class="label-file" style="pointer-events: initial !important;">
+            <ion-icon name="cloud-upload" class="music-icon" title="Importer une chor&eacute;graphie depuis un fichier"></ion-icon>
+        </label>
+        <input id="fileimport" class="input-file" type="file" (change)="onFileImportChange($event)" #fileInput accept="plain/text" />
+        <button *ngIf="choregraphy.steps && choregraphy.steps.length > 0" color="dark" ion-button icon-only (click)="exportChoregraphy()" title="Exporter la chor&eacute;graphie dans un fichier"><ion-icon name="download"></ion-icon></button>
+        
+        <!-- Musique -->
+        <span class="separator">|</span>
+        <span class="toolbar-text">Musique</span>
+        <label for="selectmusic" class="label-file" style="pointer-events: initial !important;">
+            <ion-icon name="musical-notes" class="music-icon" title="Associer une musique à la chor&eacute;graphie"></ion-icon>
+        </label>
+        <input id="selectmusic" class="input-file" type="file" (change)="onFileChange($event)" #fileInput accept="audio/*" />
+        <ng-container *ngIf="musicInfo">
+            <span  class="toolbar-text">{{getMusicName()}}</span>
+            <button color="dark" ion-button icon-only (click)="playMusic()" title="Ecouter la musique"><ion-icon name="play"></ion-icon></button>
+            <button color="dark" ion-button icon-only (click)="stopMusic()" title="Arr&ecirc;ter la musique"><ion-icon name="square"></ion-icon></button>
+            <button color="dark" ion-button icon-only (click)="reinitMusic()" title="Supprimer la musique"><ion-icon name="trash"></ion-icon></button>
+        </ng-container>
+        
+        <!-- Texte d'aide -->
+        <span class="separator">|</span>
+        <span class="toolbar-text">{{stateHandler.helpText}}</span>
+        
+        <!-- Debug -->
+        <!--
+        <span class="separator">|</span>
+        <span class="toolbar-text">{{stateHandler.getCurrentStateName()}} / {{stateHandler.getCurrentActionName()}}, dirty = {{stateHandler.isDirty()}}</span>
+        -->
+    </ion-buttons>
+  
+    <ion-buttons right>
+        <!-- Danseurs -->
+        <ng-container *ngIf="choregraphy.dancers">
+            <span class="toolbar-text">Danseurs</span>
+             <!-- Orientation -->
+            <button [ngClass]="stateHandler.isActionTurnDancer() ? 'button-shadow' : ''" color="dark" ion-button icon-only (click)="turnDancer()" title="Tourner un danseur">
+                <ion-icon name="move"></ion-icon>
+            </button>
+            
+            <!-- Renommage -->
+            <button [ngClass]="stateHandler.isActionRenameDancer() ? 'button-shadow' : ''" color="dark" ion-button icon-only (click)="renameDancer()" title="Renommer un danseur">
+                <ion-icon name="create"></ion-icon>
+            </button>
+            
+            <!-- Taille -->
+            <button color="dark" ion-button icon-only (touchstart)="startDownsizingDancers()" (touchend)="stopDownsizingDancers()" (mousedown)="startDownsizingDancers()" (mouseup)="stopDownsizingDancers()" title="Diminuer la taille des dancers">
+                <ion-icon name="contract"></ion-icon>
+            </button>
+            <button color="dark" ion-button icon-only (touchstart)="startUpsizingDancers()" (touchend)="stopUpsizingDancers()" (mousedown)="startUpsizingDancers()" (mouseup)="stopUpsizingDancers()" title="Augmenter la taille des danseurs">
+                <ion-icon name="expand"></ion-icon>
+            </button>
+            
+            <!-- Rotation -->
+            <button color="dark" ion-button icon-only (touchstart)="startRotatingDancers()" (touchend)="stopRotatingDancers()" (mousedown)="startRotatingDancers()" (mouseup)="stopRotatingDancers()" title="Faire une rotation des danseurs">
+                <ion-icon name="refresh"></ion-icon>
+            </button>
+            
+            <!-- Type de dessin -->
+            <span class="toolbar-text">
+                <select (change)="changeDancerType()" [(ngModel)]="choregraphy.dancerType" class="input-editable">
+                    <option value="pawn">Pion</option>
+                    <option value="sprite">Sprite</option>
+                </select>
+            </span>
+        </ng-container>
+    </ion-buttons>
+</ion-toolbar>
+</ion-header>
+
+<canvas #bgCanvas style="z-index: 1; position: absolute;"></canvas> 
+<canvas #myCanvas (touchstart)="handleStart($event)" (touchmove)="handleMove($event)" (touchend)="handleEnd($event)" (mousedown)="handleMouseDown($event)" (mousemove)="handleMouseMove($event)" (mouseup)="handleMouseUp($event)" style="z-index: 2; position: absolute;"></canvas>
+<audio #music id="music" style="display: none" controls></audio>
+
+<ion-footer>
+    <ion-toolbar>
+        <ion-buttons left>
+            <!-- Chorégraphie -->
+            <span class="toolbar-text">Chor&eacute;graphie</span>
+            <button color="dark" ion-button icon-only (click)="addChoregraphy()" title="Cr&eacute;er une chor&eacute;graphie"><ion-icon name="add-circle"></ion-icon></button>
+            <button *ngIf="choregraphy.steps && choregraphy.steps.length > 0" color="dark" ion-button icon-only (click)="play()" title="Jouer la chor&eacute;graphie"><ion-icon name="play"></ion-icon></button>
+            <ng-container *ngIf="stateHandler.isStatePlaying()">
+                <button color="dark" ion-button icon-only (click)="stopPlaying()" title="Arr&ecirc;ter la chor&eacute;graphie"><ion-icon name="square"></ion-icon></button>
+                <span class="toolbar-text">{{timeHandler.getTimer()}}</span>
+            </ng-container>
+            <span class="toolbar-text">{{choregraphy.name}}</span>         
+        </ion-buttons>
+        <ion-buttons right>
+            <!-- Formation -->
+            <ng-container *ngIf="choregraphy.steps">
+                <span class="toolbar-text">Formes</span>
+                <button color="dark" ion-button icon-only (click)="addForm()" title="Ajouter une formation"><ion-icon name="grid"></ion-icon></button>
+                <button color="dark" ion-button icon-only (touchstart)="startDownsizing()" (touchend)="stopDownsizing()" (mousedown)="startDownsizing()" (mouseup)="stopDownsizing()" title="Diminuer la taille"><ion-icon name="contract"></ion-icon></button>
+                <button color="dark" ion-button icon-only (touchstart)="startUpsizing()" (touchend)="stopUpsizing()" (mousedown)="startUpsizing()" (mouseup)="stopUpsizing()" title="Augmenter la taille"><ion-icon name="expand"></ion-icon></button>
+                <button color="dark" ion-button icon-only (touchstart)="startRotating()" (touchend)="stopRotating()" (mousedown)="startRotating()" (mouseup)="stopRotating()" title="Faire une rotation"><ion-icon name="refresh"></ion-icon></button>
+            </ng-container>            
+        </ion-buttons>
+    </ion-toolbar>
+
+    <ion-toolbar>
+        <ion-buttons left>
+            <!-- Etape -->
+            <ng-container *ngIf="choregraphy.steps">
+                <span class="toolbar-text">Etape</span>
+                <!-- Enregistrement -->
+                <button color="dark" ion-button icon-only (click)="saveStep()" title="Enregistrer l'&eacute;tape"><ion-icon name="recording"></ion-icon></button>
+                
+                <!-- ListBox des numéros d'étape -->
+                <span class="toolbar-text">
+                    Num&eacute;ro 
+                    <select (change)="changeStep()" [(ngModel)]="lbStepNumber" class="input-editable">
+                        <option *ngFor="let stepNumber of lbStepsNumbers" [ngValue]="stepNumber.value">{{stepNumber.label}}</option>
+                    </select>
+                </span>
+                
+                <!-- Jouer l'étape -->
+                <button *ngIf="currentStepNumber < choregraphy.steps.length - 1" color="dark" ion-button icon-only (click)="playStep()" title="Jouer l'&eacute;tape"><ion-icon name="play"></ion-icon></button>
+                
+                <!-- Suppression de l'étape-->
+                <button *ngIf="currentStepNumber < choregraphy.steps.length" color="dark" ion-button icon-only (click)="deleteStep()" title="Supprimer l'&eacute;tape"><ion-icon name="trash"></ion-icon></button>
+                
+                <!-- Champs de saisie -->                
+                <span class="toolbar-text">
+                    Dur&eacute;e immobilit&eacute;
+                    <input (change)="stepParameterChanged()" type="number" [(ngModel)]="stepHandler.currentStep.motionlessDuration" class="input-editable "style="width: 50px;" />
+                    Dur&eacute;e jusqu'&agrave; la prochaine &eacute;tape
+                    <input (change)="stepParameterChanged()" type="number" [(ngModel)]="stepHandler.currentStep.moveDuration" class="input-editable" style="width: 50px;" />
+                    Note
+                    <input (change)="stepParameterChanged()" type="text" [(ngModel)]="stepHandler.currentStep.note" class="input-editable" style="width: 300px;" />
+                </span>
+            </ng-container>
+        </ion-buttons>
+        <ion-buttons right>
+            <!-- Background -->
+            <span class="toolbar-text">Background</span>
+            <button [ngClass]="backgroundHandler.gridShowing ? 'button-shadow' : ''" color="dark" ion-button icon-only (click)="showOrHideGrid()" title="Montrer ou cacher la grille"><ion-icon name="grid"></ion-icon></button>
+            <ng-container *ngIf="backgroundHandler.gridShowing">
+                <button color="dark" ion-button icon-only (touchstart)="startDownsizingGrid()" (touchend)="stop()" (mousedown)="startDownsizingGrid()" (mouseup)="stop()" title="Diminuer la taille de la grille"><ion-icon name="contract"></ion-icon></button>
+                <button color="dark" ion-button icon-only (touchstart)="startUpsizingGrid()" (touchend)="stop()" (mousedown)="startUpsizingGrid()" (mouseup)="stop()" title="Augmenter la taille de la grille"><ion-icon name="expand"></ion-icon></button>
+            </ng-container>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-footer>
+
+<!--
+<button *ngFor="let colour of availableColours" icon-only ion-button (click)="changeColour(colour)">
+    <ion-icon [style.color]="colour" name="brush"></ion-icon>
+</button>
+<button color="dark" ion-button icon-only (click)="clearCanvas()"><ion-icon name="trash"></ion-icon></button>
+<button color="dark" ion-button icon-only (click)="changeSize(5)"><ion-icon style="font-size: 0.25em;" name="radio-button-on"></ion-icon></button>
+<button color="dark" ion-button icon-only (click)="changeSize(10)"><ion-icon style="font-size: 0.5em;" name="radio-button-on"></ion-icon></button>
+<button color="dark" ion-button icon-only (click)="changeSize(20)"><ion-icon style="font-size: 1em;" name="radio-button-on"></ion-icon></button>
+<button color="dark" ion-button icon-only (click)="changeSize(50)"><ion-icon style="font-size: 2em;" name="radio-button-on"></ion-icon></button>
+<button color="dark" ion-button icon-only (click)="changeSize(200)"><ion-icon style="font-size: 3em;" name="radio-button-on"></ion-icon></button>
+<button style="border: 1px solid #cecece;" ion-button icon-only style.color="#fff" (click)="changeColour('#fff')">
+    <ion-icon style="color: #fff;" name="square"></ion-icon>
+</button>
+        
+<ion-range min="0" max="100" color="danger" [(ngModel)]="stepRange" (ionChange)="setStepRange()"></ion-range>
+
+<span icon-only class="button button-md button-clear button-clear-md button-clear-md-dark button-inner inline-icon-button" title="Ajouter une image">
+    <a [href]="exportUrl" download="choregraphy.txt" style="color: black !important"><ion-icon name="download" class="icon icon-md ion-md-download"></ion-icon></a>
+</span>
+-->
+<!-- Coulisses -->
+<!--
+<button *ngIf="choregraphy.steps" [ngClass]="(stateHandler.isBackstage() || stateHandler.isDraggingStage()) ? 'button-shadow' : ''" color="dark" ion-button icon-only (click)="editBackstage()" title="Editer les coulisses">
+    <ion-icon name="log-in"></ion-icon>
+</button>
+-->

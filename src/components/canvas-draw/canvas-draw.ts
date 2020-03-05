@@ -404,7 +404,8 @@ export class CanvasDrawComponent {
         { type: 'radio', label: 'Ligne horizontale', value: 'horizontalLine' },
         { type: 'radio', label: 'Ligne verticale', value: 'verticalLine' },
         { type: 'radio', label: 'Triangle', value: 'triangle' },
-        { type: 'radio', label: 'Multi-ligne horizontal', value: 'horizontalMultiline' }
+        { type: 'radio', label: 'Multi-ligne horizontal', value: 'horizontalMultiline' },
+        { type: 'radio', label: 'Multi-ligne vertical', value: 'verticalMultiline' }
       ],
       buttons: [
         { text: 'Annuler', role: 'cancel' },
@@ -436,9 +437,39 @@ export class CanvasDrawComponent {
     } else if (data == 'triangle') {
       this.stepHandler.setCurrentFormName('polygon');
       this.newTriangleForm();
-    } else if (data == 'horizontalMultiline') {
+    } else if (data == 'horizontalMultiline' || data == 'verticalMultiline') {
+      this.addMultilineForm(data);
+      return true;      
+    }
+    this.drawAll();
+    this.stateHandler.formAdded();
+    return true;
+  }
+  
+  addMultilineForm(formName) {
+    let alert = this.alertCtrl.create({
+      title: 'Ajouter une formation',
+      inputs: [
+        { name: 'nbLines', placeholder: 'Nombre de lignes', type: 'number' }
+      ],
+      buttons: [
+        { text: 'Annuler', role: 'cancel' },
+        { text: 'OK', handler: data => { return this.handleAddMultilineForm(formName, data.nbLines); } }
+      ]
+    });
+    alert.present();
+  }
+  
+  handleAddMultilineForm(formName, nbLibnes) {
+    if (nbLibnes == null || nbLibnes == '') {
+      return false;
+    }
+    if (formName == 'horizontalMultiline') {
       this.stepHandler.setCurrentFormName('multiline');
-      this.newHorizontalMultilineForm();
+      this.newHorizontalMultilineForm(parseInt(nbLibnes));
+    } else if (formName == 'verticalMultiline') {
+      this.stepHandler.setCurrentFormName('multiline');
+      this.newVerticalMultilineForm(parseInt(nbLibnes));
     }
     this.drawAll();
     this.stateHandler.formAdded();
@@ -952,9 +983,14 @@ export class CanvasDrawComponent {
   /**
    * Formation multi-ligne.
    */
-  newHorizontalMultilineForm() {
+  newHorizontalMultilineForm(nbLines) {
     this.templateHandler.newHorizontalMultilineForm(this.canvasElement.width, this.canvasElement.height, this.percent, this.currentStepNumber,
-      this.choregraphy.dancers, 3);
+      this.choregraphy.dancers, nbLines);
+  }
+  
+  newVerticalMultilineForm(nbLines) {
+    this.templateHandler.newVerticalMultilineForm(this.canvasElement.width, this.canvasElement.height, this.percent, this.currentStepNumber,
+      this.choregraphy.dancers, nbLines);
   }
   
   // ===== Animation =====

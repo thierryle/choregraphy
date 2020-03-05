@@ -57,6 +57,8 @@ export class TemplateHandlerProvider {
       this.tplLine.resize(length, dancers);
     } else if (formName == 'polygon') {
       this.tplPolygon.resize(length, dancers);
+    } else if (formName == 'multiline') {
+      this.tplMultiline.resize(length, dancers);
     }
   }
   
@@ -75,6 +77,13 @@ export class TemplateHandlerProvider {
         point.x = point.x * ratioWidth;
         point.y = point.y * ratioHeight;
       }
+    } else if (formName == 'multiline') {
+      for (let line of formData) {
+        line.a.x = line.a.x * ratioWidth;
+        line.a.y = line.a.y * ratioHeight;
+        line.b.x = line.b.x * ratioWidth;
+        line.b.y = line.b.y * ratioHeight;
+      }      
     }
   }
   
@@ -104,6 +113,23 @@ export class TemplateHandlerProvider {
     if (formName == 'line') {
       return this.util.collisionSegmentCircle(this.tplLine.a, this.tplLine.b, circle);
     }
+    if (formName == 'multiline') {
+      /*
+      for (let line of this.tplMultiline.lines) {
+        let point = this.util.collisionSegmentCircle(line.a, line.b, circle);
+        if (point != null) {
+          return point;
+        }
+      }
+      */
+      for (let i = 0; i < this.tplMultiline.lines.length; i++) {
+        let point = this.util.collisionSegmentCircle(this.tplMultiline.lines[i].a, this.tplMultiline.lines[i].b, circle);
+        if (point != null) {
+          this.tplMultiline.setLastPointedLine(i);
+          return point;
+        }
+      }
+    }
     return null;
   }
   
@@ -114,6 +140,8 @@ export class TemplateHandlerProvider {
       this.tplCircle.move(offsetX, offsetY, dancers);
     } else if (formName == 'line') {
       this.tplLine.move(offsetX, offsetY, dancers);
+    } else if (formName == 'multiline') {
+      this.tplMultiline.move(offsetX, offsetY, dancers);
     }
   }
   
@@ -203,12 +231,11 @@ export class TemplateHandlerProvider {
   }
   
   // ===== Formation multi-ligne =====
-  /*
-  newVerticalMultilineForm(width, height, percent, stepNumber, dancers) {
-    this.tplLine.setDefaultVertical(width, height, percent);
-    this.initLineForm(stepNumber, dancers);
+  
+  newVerticalMultilineForm(width, height, percent, stepNumber, dancers, nbLines) {
+    this.tplMultiline.setDefaultVertical(width, height, percent, nbLines);
+    this.initMultilineForm(stepNumber, dancers);
   }
-  */
   
   newHorizontalMultilineForm(width, height, percent, stepNumber, dancers, nbLines) {
     this.tplMultiline.setDefaultHorizontal(width, height, percent, nbLines);
@@ -216,6 +243,10 @@ export class TemplateHandlerProvider {
   }
   
   initMultilineForm(stepNumber, dancers) {
-    this.tplMultiline.initForm(dancers);
+    if (stepNumber > 0) {
+      this.tplMultiline.initCleverForm(dancers);
+    } else {
+      this.tplMultiline.initForm(dancers);
+    }
   }
 }

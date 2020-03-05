@@ -68,7 +68,7 @@ export class LineProvider {
   }
   
   /**
-   * Déplacement du cercle avec les danseurs qui sont dessus.
+   * Déplacement de la ligne avec les danseurs qui sont dessus.
    */
   move(offsetX, offsetY, dancers) {
     for (let dancer of dancers) {
